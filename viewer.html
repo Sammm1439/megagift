@@ -1,18 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Megagift Viewer</title>
-<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-<script defer src="viewer.js"></script>
-<style>
-  body { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#111; color:#fff; font-family:sans-serif; }
-  video { width:480px; height:360px; border:2px solid #fff; border-radius:10px; margin-top:20px; }
-</style>
-</head>
-<body>
-  <h1>Megagift Viewer</h1>
-  <video id="remoteVideo" autoplay playsinline></video>
-</body>
-</html>
+const remoteVideo = document.getElementById('remoteVideo');
+
+// 1️⃣ Create Peer object (viewer)
+const peer = new Peer({
+  host: '0.peerjs.com',
+  port: 443,
+  secure: true
+});
+
+// 2️⃣ Automatically call the host
+peer.on('open', id => {
+  console.log("Viewer Peer ID:", id);
+
+  const call = peer.call("host123", null); // connect to host
+  call.on('stream', remoteStream => {
+    remoteVideo.srcObject = remoteStream; // show her live video
+  });
+});
