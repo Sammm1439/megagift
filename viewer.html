@@ -1,43 +1,129 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Megagift Viewer</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <title>Megagift Viewer</title>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Nunito, sans-serif;
+      color: white;
+    }
 
-<style>
-  body{
-    background:#ff003f;
-    font-family:'Nunito',sans-serif;
-    color:white;
-    text-align:center;
-    margin:0;
-    padding:0;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-  }
-  h1{
-    font-size:36px;
-    margin-bottom:30px;
-  }
-  video{
-    width:500px;
-    height:380px;
-    border-radius:15px;
-    border:3px solid white;
-  }
-</style>
+    video {
+      width: 90%;
+      max-width: 900px;
+      border-radius: 20px;
+      background: #111;
+      box-shadow: 0 0 40px rgba(255,0,63,0.6);
+    }
+
+    h1 {
+      position: absolute;
+      top: 20px;
+      font-size: 20px;
+      opacity: 0.7;
+    }
+  </style>
 </head>
-
 <body>
-<h1>Watching live reaction ❤️</h1>
+
+<h1>Watching Live 💖</h1>
 <video id="remoteVideo" autoplay playsinline></video>
 
-<script src="viewer.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  updateDoc,
+  getDoc,
+  collection,
+  addDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBVFBqpZLGOE5PN1hnRN4GNp3AHfjcHNxI",
+  authDomain: "megagift03.firebaseapp.com",
+  projectId: "megagift03",
+  storageBucket: "megagift03.firebasestorage.app",
+  messagingSenderId: "220522611453",
+  appId: "1:220522611453:web:95284da4a574518d26b494"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const servers = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" }
+  ]
+};
+
+const pc = new RTCPeerConnection(servers);
+const video = document.getElementById("remoteVideo");
+
+pc.ontrack = event => {
+  video.srcObject = event.streams[0];
+};
+
+const roomRef = doc(db, "calls", "megagift-room");
+
+async function startViewer() {
+
+  // Create offer
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  await setDoc(roomRef, {
+    offer: {
+      type: offer.type,
+      sdp: offer.sdp
+    }
+  });
+
+  // Listen for answer
+  onSnapshot(roomRef, async snapshot => {
+    const data = snapshot.data();
+    if (data?.answer && !pc.currentRemoteDescription) {
+      const answer = new RTCSessionDescription(data.answer);
+      await pc.setRemoteDescription(answer);
+    }
+  });
+
+  // Send ICE candidates
+  pc.onicecandidate = event => {
+    if (event.candidate) {
+      const candidateRef =
+        collection(roomRef, "offerCandidates");
+      addDoc(candidateRef, event.candidate.toJSON());
+    }
+  };
+
+  // Receive ICE candidates
+  const answerCandidatesRef =
+    collection(roomRef, "answerCandidates");
+
+  onSnapshot(answerCandidatesRef, snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type === "added") {
+        const candidate =
+          new RTCIceCandidate(change.doc.data());
+        pc.addIceCandidate(candidate);
+      }
+    });
+  });
+}
+
+startViewer();
+</script>
+
 </body>
 </html>
