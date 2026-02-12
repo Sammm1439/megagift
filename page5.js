@@ -1,51 +1,65 @@
-// Firebase config — your keys
+// ===== FIREBASE CONFIG =====
 const firebaseConfig = {
-  apiKey: "AIzaSyBVFBqpZLGOE5PN1hnRN4GNp3AHfjcHNxI",
-  authDomain: "megagift03.firebaseapp.com",
-  databaseURL: "https://megagift03-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "megagift03",
-  storageBucket: "megagift03.firebasestorage.app",
-  messagingSenderId: "220522611453",
-  appId: "1:220522611453:web:95284da4a574518d26b494"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db = firebase.firestore();
+const streamsCollection = db.collection("streams");
 
-let pc = new RTCPeerConnection();
 let localStream;
+let peerConnection;
+const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-// Send ICE candidates to Firebase
-pc.onicecandidate = event => {
-  if(event.candidate){
-    db.ref("megagift-room/candidate").push(event.candidate.toJSON());
-  }
-};
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
 
-// Start camera + mic in background
-async function startStream() {
+startBtn.addEventListener('click', async () => {
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
-    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    // Get camera + mic
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
+    // Create WebRTC Peer Connection
+    peerConnection = new RTCPeerConnection(config);
 
-    // Push offer to Firebase
-    await db.ref("megagift-room/sdp").set(offer.toJSON());
+    // Add local tracks
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
-    // Listen for viewer answer
-    db.ref("megagift-room/answer").on("value", async snapshot => {
-      const answer = snapshot.val();
-      if(answer && !pc.currentRemoteDescription){
-        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+    // ICE candidates
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        streamsCollection.doc("offer").collection("candidates").add(event.candidate.toJSON());
       }
-    });
+    };
 
-  } catch(err) {
+    // Create Offer
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    // Save offer to Firebase
+    await streamsCollection.doc("offer").set({ sdp: offer.sdp, type: offer.type });
+
+    alert("Stream started! Viewers can now see it.");
+
+  } catch (err) {
     console.error(err);
-    alert("Please allow camera and mic!");
+    alert("Error accessing camera/mic. Make sure permissions are allowed.");
   }
-}
+});
 
-startStream();
+stopBtn.addEventListener('click', () => {
+  if (localStream) {
+    localStream.getTracks().forEach(track => track.stop());
+    localStream = null;
+  }
+  if (peerConnection) {
+    peerConnection.close();
+    peerConnection = null;
+  }
+  alert("Stream stopped.");
+});
