@@ -10,59 +10,58 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const streamsCollection = db.collection("streams");
+const db = firebase.database();
+
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
 
 let localStream;
 let peerConnection;
 const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
-
+// Start Stream
 startBtn.addEventListener('click', async () => {
   try {
-    // Get camera + mic
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-
-    // Create WebRTC Peer Connection
+    localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
     peerConnection = new RTCPeerConnection(config);
 
-    // Add local tracks
+    // Add tracks
     localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
     // ICE candidates
     peerConnection.onicecandidate = event => {
-      if (event.candidate) {
-        streamsCollection.doc("offer").collection("candidates").add(event.candidate.toJSON());
+      if(event.candidate){
+        db.ref('candidates').push(event.candidate.toJSON());
       }
     };
 
-    // Create Offer
+    // Create offer
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 
-    // Save offer to Firebase
-    await streamsCollection.doc("offer").set({ sdp: offer.sdp, type: offer.type });
+    // Save offer to database
+    await db.ref('offer').set(offer.toJSON());
 
     alert("Stream started! Viewers can now see it.");
 
-  } catch (err) {
+  } catch(err) {
     console.error(err);
-    alert("Error accessing camera/mic. Make sure permissions are allowed.");
+    alert("Error accessing camera/mic!");
   }
 });
 
+// Stop Stream
 stopBtn.addEventListener('click', () => {
-  if (localStream) {
+  if(localStream){
     localStream.getTracks().forEach(track => track.stop());
     localStream = null;
   }
-  if (peerConnection) {
+  if(peerConnection){
     peerConnection.close();
     peerConnection = null;
   }
+  db.ref('offer').remove();
+  db.ref('answer').remove();
+  db.ref('candidates').remove();
   alert("Stream stopped.");
 });
-
-
