@@ -22,7 +22,7 @@ const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 // Start Stream
 startBtn.addEventListener('click', async () => {
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     peerConnection = new RTCPeerConnection(config);
 
     // Add tracks
@@ -39,14 +39,18 @@ startBtn.addEventListener('click', async () => {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(offer);
 
-    // Save offer to database
-    await db.ref('offer').set(offer.toJSON());
+    // Save offer manually (type + sdp)
+    const offerData = {
+      type: offer.type,
+      sdp: offer.sdp
+    };
+    await db.ref('offer').set(offerData);
 
     alert("Stream started! Viewers can now see it.");
 
   } catch(err) {
     console.error(err);
-    alert("Error accessing camera/mic!");
+    alert("Error accessing camera/mic! Make sure you are on HTTPS or localhost and allowed camera/mic permissions.");
   }
 });
 
