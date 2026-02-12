@@ -2,31 +2,28 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>megagift :)</title>
+<title>megagift</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 body{
 margin:0;
 background:#ff003f;
 color:white;
-font-family:Nunito, sans-serif;
+font-family:Nunito;
 display:flex;
 justify-content:center;
 align-items:center;
 height:100vh;
 font-size:28px;
-text-align:center;
 }
 </style>
-
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-
 </head>
+
 <body>
 
-<div>
-i hope you like it :)
-</div>
+<div>i hope you like it :)</div>
 
 <script type="module">
 
@@ -52,15 +49,11 @@ appId: "1:220522611453:web:95284da4a574518d26b494"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const servers = {
-iceServers: [
-{ urls: "stun:stun.l.google.com:19302" }
-]
-};
+const pc = new RTCPeerConnection({
+iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+});
 
-const pc = new RTCPeerConnection(servers);
-
-// GET CAMERA + MIC
+// get camera
 const stream = await navigator.mediaDevices.getUserMedia({
 video:true,
 audio:true
@@ -70,43 +63,49 @@ stream.getTracks().forEach(track=>{
 pc.addTrack(track, stream);
 });
 
-// FIRESTORE PATH
-const callDoc = doc(db, "calls", "megagift-room");
-const offerCandidates = collection(db, "calls", "megagift-room", "offerCandidates");
-const answerCandidates = collection(db, "calls", "megagift-room", "answerCandidates");
+const callRef = doc(db,"calls","megagift-room");
+const offerCandidates = collection(db,"calls","megagift-room","offerCandidates");
+const answerCandidates = collection(db,"calls","megagift-room","answerCandidates");
 
-// SEND ICE
-pc.onicecandidate = event=>{
-if(event.candidate){
-addDoc(offerCandidates, event.candidate.toJSON());
+// send ICE
+pc.onicecandidate = e=>{
+if(e.candidate){
+addDoc(offerCandidates, e.candidate.toJSON());
 }
 };
 
-// CREATE OFFER
-const offerDescription = await pc.createOffer();
-await pc.setLocalDescription(offerDescription);
+// create offer
+const offer = await pc.createOffer();
 
-await setDoc(callDoc,{
+await pc.setLocalDescription(offer);
+
+await setDoc(callRef,{
 offer:{
-type: offerDescription.type,
-sdp: offerDescription.sdp
+type:offer.type,
+sdp:offer.sdp
 }
 });
 
-// RECEIVE ANSWER
-onSnapshot(callDoc, snapshot=>{
+// receive answer
+onSnapshot(callRef, snapshot=>{
 const data = snapshot.data();
+
 if(data?.answer && !pc.currentRemoteDescription){
-pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+
+pc.setRemoteDescription(
+new RTCSessionDescription(data.answer)
+);
+
 }
 });
 
-// RECEIVE ICE FROM VIEWER
+// receive ICE
 onSnapshot(answerCandidates, snapshot=>{
 snapshot.docChanges().forEach(change=>{
 if(change.type==="added"){
-const candidate = new RTCIceCandidate(change.doc.data());
-pc.addIceCandidate(candidate);
+pc.addIceCandidate(
+new RTCIceCandidate(change.doc.data())
+);
 }
 });
 });
