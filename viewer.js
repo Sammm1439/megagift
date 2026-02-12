@@ -7,46 +7,40 @@ const firebaseConfig = {
   storageBucket: "megagift03.firebasestorage.app",
   messagingSenderId: "220522611453",
   appId: "1:220522611453:web:95284da4a574518d26b494"
-
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(); // ✅ Firestore
+const db = firebase.database();
 
 const remoteVideo = document.getElementById("remoteVideo");
 let peerConnection;
 const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-// 1️⃣ Initialize PeerConnection
+// Initialize PeerConnection
 peerConnection = new RTCPeerConnection(config);
 
-// 2️⃣ Receive remote tracks
+// Display remote stream
 peerConnection.ontrack = event => {
   remoteVideo.srcObject = event.streams[0];
 };
 
-// 3️⃣ Listen for ICE candidates from host
-db.collection("streams").doc("offer").collection("candidates")
-  .onSnapshot(snapshot => {
-    snapshot.docChanges().forEach(change => {
-      if (change.type === "added") {
-        const candidate = new RTCIceCandidate(change.doc.data());
-        peerConnection.addIceCandidate(candidate);
-      }
-    });
-  });
+// Listen for ICE candidates from host
+db.ref('candidates').on('child_added', snapshot => {
+  const candidate = new RTCIceCandidate(snapshot.val());
+  peerConnection.addIceCandidate(candidate);
+});
 
-// 4️⃣ Fetch host offer and create answer
+// Get host offer and create answer
 (async () => {
-  const offerDoc = await db.collection("streams").doc("offer").get();
-  if (!offerDoc.exists) return alert("Stream not started yet.");
+  const offerSnap = await db.ref('offer').get();
+  if(!offerSnap.exists()) return alert("Stream not started yet.");
 
-  const offer = offerDoc.data();
+  const offer = offerSnap.val();
   await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
 
   const answer = await peerConnection.createAnswer();
   await peerConnection.setLocalDescription(answer);
 
-  // Save answer back to Firebase
-  await db.collection("streams").doc("answer").set({ sdp: answer.sdp, type: answer.type });
+  // Send answer to database
+  db.ref('answer').set(answer.toJSON());
 })();
