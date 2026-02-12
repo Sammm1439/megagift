@@ -4,17 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Megagift Viewer</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 <script defer src="viewer.js"></script>
 <style>
-  body { display:flex; flex-direction:column; align-items:center; padding:50px; background:#111; color:#fff; font-family:sans-serif; }
+  body { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#111; color:#fff; font-family:sans-serif; }
   video { width:480px; height:360px; border:2px solid #fff; border-radius:10px; margin-top:20px; }
+  input { padding:8px; font-size:16px; margin-top:10px; width:300px; text-align:center; }
+  button { margin-top:10px; padding:8px 16px; font-size:16px; cursor:pointer; }
 </style>
 </head>
 <body>
-  <h1>Megagift - Live Stream</h1>
+  <h1>Megagift Viewer</h1>
+  <input type="text" id="peerIdInput" placeholder="Enter host Peer ID" />
+  <button id="connectBtn">Connect</button>
   <video id="remoteVideo" autoplay playsinline></video>
 </body>
 </html>
-
