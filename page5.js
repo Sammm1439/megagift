@@ -1,11 +1,12 @@
 // ===== FIREBASE CONFIG =====
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBVFBqpZLGOE5PN1hnRN4GNp3AHfjcHNxI",
+  authDomain: "megagift03.firebaseapp.com",
+  databaseURL: "https://megagift03-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "megagift03",
+  storageBucket: "megagift03.firebasestorage.app",
+  messagingSenderId: "220522611453",
+  appId: "1:220522611453:web:95284da4a574518d26b494"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -63,4 +64,5 @@ stopBtn.addEventListener('click', () => {
   }
   alert("Stream stopped.");
 });
+
 
