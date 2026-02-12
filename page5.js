@@ -3,11 +3,11 @@ const startBtn = document.getElementById("startStream");
 
 let localStream;
 
-// 1️⃣ Create PeerJS with a fixed ID and server
+// 1️⃣ Create PeerJS with a fixed ID on the cloud server
 const peer = new Peer("host123", {
-  host: 'megagift-peerjs.onrender.com', // replace with your PeerJS server URL
+  host: '0.peerjs.com',
   port: 443,
-  path: '/'
+  secure: true
 });
 
 peer.on('open', id => {
@@ -20,7 +20,7 @@ startBtn.addEventListener('click', async () => {
     localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
     localVideo.srcObject = localStream;
 
-    // 3️⃣ Answer incoming calls from viewer
+    // 3️⃣ Answer incoming calls automatically
     peer.on('call', call => {
       call.answer(localStream);
     });
