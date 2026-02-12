@@ -63,3 +63,4 @@ stopBtn.addEventListener('click', () => {
   }
   alert("Stream stopped.");
 });
+
