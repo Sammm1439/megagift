@@ -1,20 +1,18 @@
-const remoteVideo = document.getElementById("remoteVideo");
-const peerIdInput = document.getElementById("peerIdInput");
-const connectBtn = document.getElementById("connectBtn");
+const remoteVideo = document.getElementById('remoteVideo');
 
-const peer = new Peer(); // your Peer object
-
-connectBtn.addEventListener('click', () => {
-  const hostId = peerIdInput.value.trim();
-  if(!hostId) return alert("Enter the host Peer ID!");
-
-  // 1️⃣ Call host
-  const call = peer.call(hostId, null); // no stream needed, only receiving
-  call.on('stream', remoteStream => {
-    remoteVideo.srcObject = remoteStream; // show her live video/audio
-  });
+// 1️⃣ Create Peer object
+const peer = new Peer({
+  host: 'megagift-peerjs.onrender.com', // same server
+  port: 443,
+  path: '/'
 });
 
+// 2️⃣ Automatically call host
 peer.on('open', id => {
   console.log("Viewer Peer ID:", id);
+
+  const call = peer.call("host123", null); // connect to host
+  call.on('stream', remoteStream => {
+    remoteVideo.srcObject = remoteStream; // show her live video
+  });
 });
