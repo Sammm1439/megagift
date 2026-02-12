@@ -3,18 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Megagift - Page 5</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<title>Megagift - Page 5 (Host)</title>
+<script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 <script defer src="page5.js"></script>
 <style>
-  body { display:flex; flex-direction:column; align-items:center; padding:50px; background:#111; color:#fff; font-family:sans-serif; }
-  button { margin:10px; padding:10px 20px; font-size:16px; cursor:pointer; }
+  body { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#111; color:#fff; font-family:sans-serif; }
+  video { width:480px; height:360px; border:2px solid #fff; border-radius:10px; margin-top:20px; }
+  button { margin-top:20px; padding:10px 20px; font-size:16px; cursor:pointer; }
+  p { font-size:18px; margin-top:10px; }
 </style>
 </head>
 <body>
   <h1>Megagift - Page 5</h1>
-  <button id="startBtn">Start Stream</button>
-  <button id="stopBtn">Stop Stream</button>
+  <p>Allow camera and mic to continue</p>
+  <video id="localVideo" autoplay playsinline muted></video>
+  <button id="startStream">Allow & Start Stream</button>
+  <p>Your Peer ID: <span id="peerIdDisplay">...</span></p>
 </body>
 </html>
