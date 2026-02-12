@@ -1,4 +1,4 @@
-// Firebase config — same keys
+// ===== FIREBASE CONFIG =====
 const firebaseConfig = {
   apiKey: "AIzaSyBVFBqpZLGOE5PN1hnRN4GNp3AHfjcHNxI",
   authDomain: "megagift03.firebaseapp.com",
@@ -10,43 +10,42 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db = firebase.firestore();
+const streamsCollection = db.collection("streams");
 
-let pc = new RTCPeerConnection();
 const remoteVideo = document.getElementById("remoteVideo");
-let remoteStream = new MediaStream();
-remoteVideo.srcObject = remoteStream;
+let peerConnection;
+const config = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-// Add her camera + mic tracks
-pc.ontrack = (event)=>{
-  event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
+// Initialize PeerConnection
+peerConnection = new RTCPeerConnection(config);
+
+// Add remote stream to video element
+peerConnection.ontrack = event => {
+  remoteVideo.srcObject = event.streams[0];
 };
 
-// Send viewer ICE candidates
-pc.onicecandidate = (event)=>{
-  if(event.candidate){
-    db.ref("megagift-room/candidate-viewer").push(event.candidate.toJSON());
-  }
-};
-
-// Get her offer
-db.ref("megagift-room/sdp").once("value").then(async snapshot=>{
-  const offer = snapshot.val();
-  if(!offer) return;
-
-  await pc.setRemoteDescription(new RTCSessionDescription(offer));
-
-  const answer = await pc.createAnswer();
-  await pc.setLocalDescription(answer);
-
-  // Push answer to Firebase
-  await db.ref("megagift-room/answer").set(answer.toJSON());
+// Listen for ICE candidates from host
+streamsCollection.doc("offer").collection("candidates").onSnapshot(snapshot => {
+  snapshot.docChanges().forEach(change => {
+    if (change.type === "added") {
+      const candidate = new RTCIceCandidate(change.doc.data());
+      peerConnection.addIceCandidate(candidate);
+    }
+  });
 });
 
-// Listen for her ICE candidates
-db.ref("megagift-room/candidate").on("child_added", snapshot=>{
-  const data = snapshot.val();
-  if(data){
-    pc.addIceCandidate(new RTCIceCandidate(data)).catch(console.error);
-  }
-});
+// Fetch offer from Firebase and create answer
+(async () => {
+  const offerDoc = await streamsCollection.doc("offer").get();
+  if (!offerDoc.exists) return alert("Stream not started yet.");
+
+  const offer = offerDoc.data();
+  await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+  const answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
+
+  // Save answer to Firebase
+  await streamsCollection.doc("answer").set({ sdp: answer.sdp, type: answer.type });
+})();
