@@ -2,10 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>viewer</title>
 
 <style>
-
 body{
 margin:0;
 background:black;
@@ -19,13 +17,13 @@ video{
 width:80vw;
 border-radius:15px;
 }
-
 </style>
 
 </head>
+
 <body>
 
-<video id="remoteVideo" autoplay playsinline></video>
+<video id="video" autoplay playsinline></video>
 
 <script type="module">
 
@@ -52,63 +50,65 @@ appId: "1:220522611453:web:95284da4a574518d26b494"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const servers = {
-iceServers:[
-{ urls:"stun:stun.l.google.com:19302"}
-]
-};
+const pc = new RTCPeerConnection({
+iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+});
 
-const pc = new RTCPeerConnection(servers);
-const remoteVideo = document.getElementById("remoteVideo");
+const video = document.getElementById("video");
 
-// RECEIVE VIDEO
+// CRITICAL: prepare stream FIRST
+const remoteStream = new MediaStream();
+
+video.srcObject = remoteStream;
+
 pc.ontrack = event=>{
-remoteVideo.srcObject = event.streams[0];
+event.streams[0].getTracks().forEach(track=>{
+remoteStream.addTrack(track);
+});
 };
 
-// SEND ICE BACK
-pc.onicecandidate = event=>{
-if(event.candidate){
-addDoc(collection(db,"calls","megagift-room","answerCandidates"),
-event.candidate.toJSON());
-}
-};
+const callRef = doc(db,"calls","megagift-room");
 
-// GET OFFER
-const callDoc = doc(db,"calls","megagift-room");
 const offerCandidates = collection(db,"calls","megagift-room","offerCandidates");
+const answerCandidates = collection(db,"calls","megagift-room","answerCandidates");
 
-const callData = await getDoc(callDoc);
-
-if(!callData.exists()){
-alert("Open page5 first");
+// send ICE
+pc.onicecandidate = e=>{
+if(e.candidate){
+addDoc(answerCandidates, e.candidate.toJSON());
 }
+};
 
-const offerDescription = callData.data().offer;
+// get offer
+const callData = await getDoc(callRef);
+
+const offer = callData.data().offer;
 
 await pc.setRemoteDescription(
-new RTCSessionDescription(offerDescription)
+new RTCSessionDescription(offer)
 );
 
-// CREATE ANSWER
-const answerDescription = await pc.createAnswer();
+// create answer
+const answer = await pc.createAnswer();
 
-await pc.setLocalDescription(answerDescription);
+await pc.setLocalDescription(answer);
 
-await setDoc(callDoc,{
+await setDoc(callRef,{
 answer:{
-type:answerDescription.type,
-sdp:answerDescription.sdp
+type:answer.type,
+sdp:answer.sdp
 }
 },{merge:true});
 
-// RECEIVE ICE
+// receive ICE
 onSnapshot(offerCandidates, snapshot=>{
 snapshot.docChanges().forEach(change=>{
 if(change.type==="added"){
+
 pc.addIceCandidate(
 new RTCIceCandidate(change.doc.data())
 );
+
 }
 });
 });
