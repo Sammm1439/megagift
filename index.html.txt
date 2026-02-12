@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>megagift</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="scene">
+
+    <!-- Gun -->
+    <img src="gun.png" class="gun" id="gun">
+
+    <!-- Title -->
+    <h1 class="title" id="title">megagift</h1>
+
+    <!-- Start button -->
+    <button class="start-btn" id="startBtn">start</button>
+
+    <!-- Hearts container -->
+    <div id="hearts-container"></div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #ff003f;
+  font-family: 'Nunito', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: white;
+  text-align: center;
+}
+
+.container {
+  max-width: 80%;
+}
+
+h1 {
+  font-size: 36px;
+  margin-bottom: 20px;
+  white-space: pre-line;
+}
+
+#warning {
+  margin-top: 20px;
+  font-size: 20px;
+  color: yellow;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}

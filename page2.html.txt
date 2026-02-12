@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Megagift - Page 3</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="page3.css">
+</head>
+<body>
+
+<div class="container">
+  <h1 id="typeText"></h1>
+  <button id="nextBtn">Next ❤️</button>
+</div>
+
+<script src="page3.js"></script>
+</body>
+</html>

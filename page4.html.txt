@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Megagift - Page 4</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="page4.css">
+</head>
+<body>
+  <div class="container">
+    <h1 id="typeText"></h1>
+    <p id="warning"></p>
+  </div>
+  <script src="page4.js"></script>
+</body>
+</html>

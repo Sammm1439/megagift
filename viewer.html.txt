@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Megagift Viewer</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<style>
+  body{
+    background:#ff003f;
+    font-family:'Nunito',sans-serif;
+    color:white;
+    text-align:center;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+  }
+  h1{
+    font-size:36px;
+    margin-bottom:30px;
+  }
+  video{
+    width:500px;
+    height:380px;
+    border-radius:15px;
+    border:3px solid white;
+  }
+</style>
+</head>
+
+<body>
+<h1>Watching live reaction ❤️</h1>
+<video id="remoteVideo" autoplay playsinline></video>
+
+<script src="viewer.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #ff003f;
+  font-family: 'Nunito', sans-serif;
+  overflow: hidden;
+}
+
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.question {
+  font-size: 48px;
+  margin-bottom: 40px;
+  animation: fadeIn 1.5s ease;
+}
+
+.buttons {
+  display: flex;
+  gap: 40px;
+}
+
+button {
+  padding: 15px 40px;
+  font-size: 20px;
+  border: none;
+  border-radius: 40px;
+  cursor: pointer;
+  font-weight: 900;
+  transition: all 0.3s ease;
+}
+
+#yesBtn {
+  background: white;
+  color: #ff003f;
+}
+
+#yesBtn:hover {
+  transform: scale(1.15);
+}
+
+#noBtn {
+  background: black;
+  color: white;
+  position: relative;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
